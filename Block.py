@@ -14,7 +14,9 @@ class Block:
             self._block_type = BlockType.NORMAL
 
     def draw(self, x, y, dst_surface):
-        dst_surface.blit(self._image, (x * self.SIZE[0] + self._offset[0], y * self.SIZE[1] + self._offset[1]))
+        width, height = self.SIZE
+        offset_x, offset_y = self._offset
+        dst_surface.blit(self._image, (x * width + offset_x, y * height + offset_y))
 
     def set_color(self, color):
         self._color = color

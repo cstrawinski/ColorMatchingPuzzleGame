@@ -1,0 +1,2 @@
+[{"level": 1, "max_moves": 10, "board_width": 10, "board_height": 12, "level_data": [[5, 5, 3]]},
+ {"level": 2, "max_moves": 10, "board_width": 10, "board_height": 12, "level_data": [[4, 5, 3], [5, 5, 3], [6, 5, 3]]}]

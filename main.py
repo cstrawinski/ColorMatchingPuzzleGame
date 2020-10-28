@@ -1,8 +1,9 @@
 import pygame
 import sys
-import Board
 from pygame.locals import *
 from colors import *
+from Board import Board
+from LevelManager import LevelManager
 
 
 # Lets make our entry point a class, cause why not?
@@ -13,7 +14,9 @@ class Game:
         pygame.init()
         self._window_surface = pygame.display.set_mode(self.WINDOW_SIZE, 0, 32)
         pygame.display.set_caption('Color Matching Puzzle Game')
-        self._game_board = Board.Board(10, 12, (35, 80))
+        self._level_manager = LevelManager()
+        self._game_board = Board((10, 12), (35, 80))
+        self._level = 0
         self._score = 0
         self._moves = 0
         self._score_font = pygame.font.SysFont(None, 24)
@@ -48,7 +51,8 @@ class Game:
         self._window_surface.blit(text, text.get_rect())
 
     def play(self):
-        self._game_board.new()
+        self._level_manager.load()
+        self._game_board.new(self._level_manager.level_data[self._level])
 
         while True:
             self.__handle_events()

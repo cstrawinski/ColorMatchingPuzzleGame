@@ -8,9 +8,8 @@ import random
 
 
 class Board:
-    def __init__(self, width, height, board_position):
-        self._width = width
-        self._height = height
+    def __init__(self, dimensions, board_position):
+        self._width, self._height = dimensions
         self._position = board_position
         self._playable_area = []
         self._block_colors = [RED, GREEN, BLUE, PURPLE]
@@ -20,19 +19,21 @@ class Board:
         self._block_surfaces[BlockType.WALL] = pygame.Surface(Block.SIZE, 0, 32)
         self._block_surfaces[BlockType.WALL].blit(self._block_images, (0, 0), area=pygame.Rect((len(self._block_colors) * Block.SIZE[0], 0), Block.SIZE))
 
-    def new(self):
+    def new(self, level):
+        self._width = level['board_width']
+        self._height = level['board_height']
         self._playable_area = [[self.random_block() for x in range(self._width)]
                                for y in range(self._height)]
-        # Insert a random wall piece
-        wall_x = random.randint(0, self._width - 1)
-        wall_y = random.randint(0, self._height - 1)
-        self._playable_area[wall_y][wall_x] = Block(BLACK, self._position, self._block_surfaces[BlockType.WALL], BlockType.WALL)
+        for block in level['level_data']:
+            x, y, typ = block
+            self._playable_area[y][x] = Block(BLACK, self._position, self._block_surfaces[BlockType(typ)], BlockType(typ))
 
     def draw(self, dst_surface):
         [[self._playable_area[y][x].draw(x, y, dst_surface) for x in range(self._width)] for y in range(self._height)]
 
     def click_block(self, pos):
-        board_pos = (pos[0] - self._position[0], pos[1] - self._position[1])
+        pos_x, pos_y = pos
+        board_pos = (pos_x - self._position[0], pos_y - self._position[1])
         if board_pos[0] < 0 or board_pos[1] < 0:
             return
 
@@ -79,23 +80,26 @@ class Board:
         return Block(block_color, self._position, self._block_surfaces[block_color])
 
     def _copy_from(self, pos):
-        block = self._playable_area[pos[1]][pos[0]]
+        pos_x, pos_y = pos
+        block = self._playable_area[pos_y][pos_x]
         return Block(block.get_color(), self._position, block.get_image())
 
     def _move_blocks_down(self, pos):
+        pos_x, pos_y = pos
         block_above = self._get_next_fallible_block_pos(pos)
-        if pos[1] > 0 and block_above is not None:
-            self._playable_area[pos[1]][pos[0]] = self._copy_from(block_above)
+        if pos_y > 0 and block_above is not None:
+            self._playable_area[pos_y][pos_x] = self._copy_from(block_above)
             self._move_blocks_down(block_above)
         else:
-            self._playable_area[pos[1]][pos[0]] = self.random_block()
+            self._playable_area[pos_y][pos_x] = self.random_block()
 
     def _get_next_fallible_block_pos(self, cur_block_pos):
-        pos = (cur_block_pos[0], cur_block_pos[1] - 1)
-        while pos[1] >= 0 and self._playable_area[pos[1]][pos[0]].get_block_type() == BlockType.WALL:
-            pos = (pos[0], pos[1] - 1)
+        pos_x, pos_y = cur_block_pos
+        pos_y -= 1
+        while pos_y >= 0 and self._playable_area[pos_y][pos_x].get_block_type() == BlockType.WALL:
+            pos_y -= 1
 
-        if pos[1] >= 0:
-            return pos
+        if pos_y >= 0:
+            return pos_x, pos_y
 
         return None
