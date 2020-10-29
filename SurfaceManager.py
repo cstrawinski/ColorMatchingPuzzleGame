@@ -15,7 +15,9 @@ class SurfaceManager:
         self._block_surfaces[BlockType.WALL] = {BlockColor.BLACK: pygame.Surface(Block.SIZE, 0, 32)}
 
         block_width, block_height = Block.SIZE
-        [s[1].blit(block_images, (0, 0), area=pygame.Rect((i * block_width, 0), Block.SIZE)) for i, s in enumerate(self._block_surfaces[BlockType.NORMAL].items())]
+        for i, s in enumerate(self._block_surfaces[BlockType.NORMAL].items()):
+            block_color, surface = s
+            surface.blit(block_images, (0, 0), area=pygame.Rect((i * block_width, 0), Block.SIZE))
 
         wall_img_idx = len(self._block_colors)
         wall_surface = self._block_surfaces[BlockType.WALL][BlockColor.BLACK]

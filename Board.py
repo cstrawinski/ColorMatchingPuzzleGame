@@ -40,25 +40,30 @@ class Board:
         if clicked_block[0] >= self._width or clicked_block[1] >= self._height:
             return
 
-        print('Block at [%s, %s] was clicked' % (clicked_block[0], clicked_block[1]))
+        print('Block at [%s, %s] was clicked' % clicked_block)
         return clicked_block
 
+    def get_block_at(self, pos):
+        pos_x, pos_y = pos
+        return self._playable_area[pos_y][pos_x]
+
     def get_connected_blocks(self, start_pos, connected_set):
-        color = self._playable_area[start_pos[1]][start_pos[0]].get_color()
+        block_x, block_y = start_pos
+        block = self._playable_area[block_y][block_x]
         connected_set.add(start_pos)
 
         # Check left
-        if start_pos[0] > 0 and self._playable_area[start_pos[1]][start_pos[0] - 1].get_color() == color and not (start_pos[0] - 1, start_pos[1]) in connected_set:
-            self.get_connected_blocks((start_pos[0] - 1, start_pos[1]), connected_set)
+        if block_x > 0 and self._playable_area[block_y][block_x - 1].is_equal(block) and not (block_x - 1, block_y) in connected_set:
+            self.get_connected_blocks((block_x - 1, block_y), connected_set)
         # Check up
-        if start_pos[1] > 0 and self._playable_area[start_pos[1] - 1][start_pos[0]].get_color() == color and not (start_pos[0], start_pos[1] - 1) in connected_set:
-            self.get_connected_blocks((start_pos[0], start_pos[1] - 1), connected_set)
+        if block_y > 0 and self._playable_area[block_y - 1][block_x].is_equal(block) and not (block_x, block_y - 1) in connected_set:
+            self.get_connected_blocks((block_x, block_y - 1), connected_set)
         # Check right
-        if start_pos[0] < (self._width - 1) and self._playable_area[start_pos[1]][start_pos[0] + 1].get_color() == color and not (start_pos[0] + 1, start_pos[1]) in connected_set:
-            self.get_connected_blocks((start_pos[0] + 1, start_pos[1]), connected_set)
+        if block_x < (self._width - 1) and self._playable_area[block_y][block_x + 1].is_equal(block) and not (block_x + 1, block_y) in connected_set:
+            self.get_connected_blocks((block_x + 1, block_y), connected_set)
         # Check down
-        if start_pos[1] < (self._height - 1) and self._playable_area[start_pos[1] + 1][start_pos[0]].get_color() == color and not (start_pos[0], start_pos[1] + 1) in connected_set:
-            self.get_connected_blocks((start_pos[0], start_pos[1] + 1), connected_set)
+        if block_y < (self._height - 1) and self._playable_area[block_y + 1][block_x].is_equal(block) and not (block_x, block_y + 1) in connected_set:
+            self.get_connected_blocks((block_x, block_y + 1), connected_set)
 
         return connected_set
 

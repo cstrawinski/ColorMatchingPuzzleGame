@@ -32,3 +32,7 @@ class Block:
 
     def set_block_type(self, block_type):
         self._block_type = block_type
+
+    def is_equal(self, other):
+        return self._color == other.get_color() and\
+               self._block_type == other.get_block_type()

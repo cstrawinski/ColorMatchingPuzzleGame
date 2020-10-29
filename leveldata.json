@@ -1,2 +1,2 @@
-[{"level": 1, "max_moves": 10, "board_width": 10, "board_height": 12, "goal": [[10, 2, [255, 0, 0]]], "level_data": [[5, 5, 3, "BLACK"]]},
- {"level": 2, "max_moves": 10, "board_width": 10, "board_height": 12, "goal": [[10, 2, [255, 0, 0]], [10, 2, [0, 255, 0]]], "level_data": [[4, 5, 3, "BLACK"], [5, 5, 3, "BLACK"], [6, 5, 3, "BLACK"]]}]
+[{"level": 1, "max_moves": 10, "board_width": 10, "board_height": 12, "goal": [[10, 2, "RED"]], "level_data": [[5, 5, 3, "BLACK"]]},
+ {"level": 2, "max_moves": 10, "board_width": 10, "board_height": 12, "goal": [[10, 2, "RED"], [10, 2, "GREEN"]], "level_data": [[4, 5, 3, "BLACK"], [5, 5, 3, "BLACK"], [6, 5, 3, "BLACK"]]}]
