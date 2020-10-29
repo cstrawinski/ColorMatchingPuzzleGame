@@ -1,9 +1,11 @@
+import os
 import pygame
 import sys
 from pygame.locals import *
 from colors import *
 from Board import Board
 from LevelManager import LevelManager
+from SurfaceManager import SurfaceManager
 
 
 # Lets make our entry point a class, cause why not?
@@ -15,11 +17,13 @@ class Game:
         self._animation_timer = pygame.time.Clock()
         self._window_surface = pygame.display.set_mode(self.WINDOW_SIZE, 0, 32)
         pygame.display.set_caption('Color Matching Puzzle Game')
+        self._surface_manager = SurfaceManager()
         self._level_manager = LevelManager()
-        self._game_board = Board((10, 12), (35, 80))
+        self._game_board = Board((10, 12), (35, 80), self._surface_manager)
         self._level = 0
         self._score = 0
         self._remaining_moves = 0
+        self._goal = []
         self._score_font = pygame.font.SysFont(None, 24)
         self._big_font = pygame.font.SysFont(None, 48)
 
@@ -41,6 +45,11 @@ class Game:
         self._remaining_moves -= 1
         self._game_board.fill_empty_blocks(connected_blocks)
 
+    def _new_level(self):
+        self._game_board.new(self._level_manager.level_data[self._level])
+        self._remaining_moves = self._level_manager.level_data[self._level]['max_moves']
+        self._goal = self._level_manager.level_data[self._level]['goal']
+
     def draw_stats(self):
         self.draw_score()
         self.draw_moves()
@@ -55,6 +64,9 @@ class Game:
         text = self._score_font.render('Score: %s' % self._score, True, WHITE)
         self._window_surface.blit(text, text.get_rect())
 
+    def draw_goal(self):
+        pass
+
     def end_game(self):
         text = self._big_font.render('Game Over', True, WHITE)
         text_rect = text.get_rect()
@@ -64,9 +76,9 @@ class Game:
         self._window_surface.blit(text, text_rect)
 
     def play(self):
+        self._surface_manager.load_blocks(os.path.join("resources", "blocks.png"))
         self._level_manager.load()
-        self._game_board.new(self._level_manager.level_data[self._level])
-        self._remaining_moves = self._level_manager.level_data[self._level]['max_moves']
+        self._new_level()
 
         while True:
             self.__handle_events()

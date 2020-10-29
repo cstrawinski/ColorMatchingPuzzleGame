@@ -1,23 +1,16 @@
 from operator import itemgetter
-from colors import *
+from colors import BlockColor
 from Block import Block
 from BlockType import BlockType
-import os
-import pygame
 import random
 
 
 class Board:
-    def __init__(self, dimensions, board_position):
+    def __init__(self, dimensions, board_position, surface_manager):
         self._width, self._height = dimensions
         self._position = board_position
         self._playable_area = []
-        self._block_colors = [RED, GREEN, BLUE, PURPLE]
-        self._block_images = pygame.image.load(os.path.join("resources", "blocks.png")).convert_alpha()
-        self._block_surfaces = {c: pygame.Surface(Block.SIZE, 0, 32) for c in self._block_colors}
-        [self._block_surfaces[c].blit(self._block_images, (0, 0), area=pygame.Rect((i * Block.SIZE[0], 0), Block.SIZE)) for i, c in enumerate(self._block_colors)]
-        self._block_surfaces[BlockType.WALL] = pygame.Surface(Block.SIZE, 0, 32)
-        self._block_surfaces[BlockType.WALL].blit(self._block_images, (0, 0), area=pygame.Rect((len(self._block_colors) * Block.SIZE[0], 0), Block.SIZE))
+        self._surface_manager = surface_manager
 
     def new(self, level):
         self._width = level['board_width']
@@ -25,8 +18,12 @@ class Board:
         self._playable_area = [[self.random_block() for x in range(self._width)]
                                for y in range(self._height)]
         for block in level['level_data']:
-            x, y, typ = block
-            self._playable_area[y][x] = Block(BLACK, self._position, self._block_surfaces[BlockType(typ)], BlockType(typ))
+            x, y, typ, color_name = block
+            block_surfaces = self._surface_manager.get_block_surfaces(BlockType(typ))
+            self._playable_area[y][x] = Block(BlockColor.BLACK,
+                                              self._position,
+                                              block_surfaces[BlockColor[color_name]],
+                                              BlockType(typ))
 
     def draw(self, dst_surface):
         [[self._playable_area[y][x].draw(x, y, dst_surface) for x in range(self._width)] for y in range(self._height)]
@@ -63,10 +60,10 @@ class Board:
         if start_pos[1] < (self._height - 1) and self._playable_area[start_pos[1] + 1][start_pos[0]].get_color() == color and not (start_pos[0], start_pos[1] + 1) in connected_set:
             self.get_connected_blocks((start_pos[0], start_pos[1] + 1), connected_set)
 
-        return connected_set;
+        return connected_set
 
     def clear(self, connected_set):
-        [self._playable_area[b[1]][b[0]].set_color(BLACK) for b in connected_set]
+        [self._playable_area[b[1]][b[0]].set_color(BlockColor.BLACK) for b in connected_set]
 
     def fill_empty_blocks(self, empty_set):
         sorted_by_x = sorted(empty_set, key=itemgetter(0))
@@ -75,14 +72,16 @@ class Board:
         [self._move_blocks_down(block_pos) for block_pos in empty_block_list]
 
     def random_block(self):
-        color_num = random.randint(0, len(self._block_colors) - 1)
-        block_color = self._block_colors[color_num]
-        return Block(block_color, self._position, self._block_surfaces[block_color])
+        all_blocks = self._surface_manager.get_block_colors()
+        surfaces = self._surface_manager.get_block_surfaces(BlockType.NORMAL)
+        color_num = random.randint(0, len(all_blocks) - 1)
+        block_color = all_blocks[color_num]
+        return Block(block_color, self._position, surfaces[block_color])
 
     def _copy_from(self, pos):
         pos_x, pos_y = pos
         block = self._playable_area[pos_y][pos_x]
-        return Block(block.get_color(), self._position, block.get_image())
+        return Block(block.get_color(), self._position, block.get_image(), block.get_block_type())
 
     def _move_blocks_down(self, pos):
         pos_x, pos_y = pos

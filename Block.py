@@ -1,15 +1,15 @@
-import pygame
 from BlockType import BlockType
 
 
 class Block:
     SIZE = (32, 32)
 
-    def __init__(self, color, offset, image, block_type=None):
+    def __init__(self, color, offset, image, block_type=None, life=1):
         self._color = color
+        self._block_type = block_type
+        self._life = life
         self._offset = offset
         self._image = image
-        self._block_type = block_type
         if block_type is None:
             self._block_type = BlockType.NORMAL
 
