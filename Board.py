@@ -12,7 +12,8 @@ class Board:
         self._playable_area = []
         self._surface_manager = surface_manager
 
-    def new(self, level):
+    def new(self, level, position):
+        self._position = position
         self._width = level['board_width']
         self._height = level['board_height']
         self._playable_area = [[self.random_block() for x in range(self._width)]
@@ -100,8 +101,10 @@ class Board:
     def _get_next_fallible_block_pos(self, cur_block_pos):
         pos_x, pos_y = cur_block_pos
         pos_y -= 1
-        while pos_y >= 0 and self._playable_area[pos_y][pos_x].get_block_type() == BlockType.WALL:
+        block_type = self._playable_area[pos_y][pos_x].get_block_type()
+        while pos_y >= 0 and (block_type == BlockType.WALL or block_type == BlockType.NONE):
             pos_y -= 1
+            block_type = self._playable_area[pos_y][pos_x].get_block_type()
 
         if pos_y >= 0:
             return pos_x, pos_y

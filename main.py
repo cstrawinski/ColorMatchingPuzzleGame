@@ -11,7 +11,7 @@ from SurfaceManager import SurfaceManager
 
 # Lets make our entry point a class, cause why not?
 class Game:
-    WINDOW_SIZE = (400, 480)
+    WINDOW_SIZE = (500, 600)
     HUD_SIZE = (WINDOW_SIZE[0], 80)
 
     def __init__(self):
@@ -57,7 +57,15 @@ class Game:
         self._game_board.fill_empty_blocks(connected_blocks)
 
     def _new_level(self):
-        self._game_board.new(self._level_manager.level_data[self._level - 1])
+        level = self._level_manager.level_data[self._level - 1]
+
+        # Position the board in the center of the window
+        window_width, window_height = self.WINDOW_SIZE
+        board_width = level['board_width'] * Block.SIZE[0]
+        board_height = level['board_height'] * Block.SIZE[1]
+        board_position = (window_width - board_width) / 2, (window_height - board_height) / 2
+
+        self._game_board.new(self._level_manager.level_data[self._level - 1], board_position)
         self._remaining_moves = self._level_manager.level_data[self._level - 1]['max_moves']
         # self._level_manager.level_data[self._level]['goal']
         self._goals = self._level_manager.get_goals(self._level - 1)
@@ -79,7 +87,7 @@ class Game:
     def draw_moves(self):
         text = self._score_font.render('Moves: %s' % self._remaining_moves, True, WHITE)
         text_rect = text.get_rect()
-        text_rect.x = self.WINDOW_SIZE[0] - 100
+        text_rect.x = self.WINDOW_SIZE[0] - 90
         self._window_surface.blit(text, text_rect)
 
     def draw_score(self):

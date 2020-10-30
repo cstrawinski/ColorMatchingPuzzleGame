@@ -11,10 +11,13 @@ class SurfaceManager:
 
     def load_blocks(self, filename):
         block_images = pygame.image.load(filename).convert_alpha()
+        self._block_surfaces[BlockType.NONE] = {BlockColor.BLACK: pygame.Surface(Block.SIZE, 0, 32)}
         self._block_surfaces[BlockType.NORMAL] = {c: pygame.Surface(Block.SIZE, 0, 32) for c in self._block_colors}
         self._block_surfaces[BlockType.WALL] = {BlockColor.BLACK: pygame.Surface(Block.SIZE, 0, 32)}
 
         block_width, block_height = Block.SIZE
+        none_surface = self._block_surfaces[BlockType.NONE][BlockColor.BLACK]
+        none_surface.fill(BlockColor.BLACK.value)
         for i, s in enumerate(self._block_surfaces[BlockType.NORMAL].items()):
             block_color, surface = s
             surface.blit(block_images, (0, 0), area=pygame.Rect((i * block_width, 0), Block.SIZE))
