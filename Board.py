@@ -101,10 +101,8 @@ class Board:
     def _get_next_fallible_block_pos(self, cur_block_pos):
         pos_x, pos_y = cur_block_pos
         pos_y -= 1
-        block_type = self._playable_area[pos_y][pos_x].get_block_type()
-        while pos_y >= 0 and (block_type == BlockType.WALL or block_type == BlockType.NONE):
+        while pos_y >= 0 and not self._playable_area[pos_y][pos_x].should_fall():
             pos_y -= 1
-            block_type = self._playable_area[pos_y][pos_x].get_block_type()
 
         if pos_y >= 0:
             return pos_x, pos_y
