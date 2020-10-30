@@ -22,10 +22,10 @@ class Game:
         self._surface_manager = SurfaceManager()
         self._level_manager = LevelManager(self._surface_manager)
         self._game_board = Board((10, 12), (35, self.HUD_SIZE[1]), self._surface_manager)
-        self._level = 0
+        self._level = 1
         self._score = 0
         self._remaining_moves = 0
-        self._goals = []
+        self._goals = {}
         self._score_font = pygame.font.SysFont(None, 24)
         self._big_font = pygame.font.SysFont(None, 48)
 
@@ -50,7 +50,6 @@ class Game:
             if count < 0:
                 count = 0
             self._goals[key] = count, block
-            # if count <= 0: win!
 
         self._game_board.clear(connected_blocks)
         self._score += len(connected_blocks)
@@ -58,10 +57,19 @@ class Game:
         self._game_board.fill_empty_blocks(connected_blocks)
 
     def _new_level(self):
-        self._game_board.new(self._level_manager.level_data[self._level])
-        self._remaining_moves = self._level_manager.level_data[self._level]['max_moves']
+        self._game_board.new(self._level_manager.level_data[self._level - 1])
+        self._remaining_moves = self._level_manager.level_data[self._level - 1]['max_moves']
         # self._level_manager.level_data[self._level]['goal']
-        self._goals = self._level_manager.get_goals(self._level)
+        self._goals = self._level_manager.get_goals(self._level - 1)
+
+    def _goals_completed(self):
+        goals_passed = True
+        for key, value in self._goals.items():
+            count, block = value
+            if count > 0:
+                goals_passed = False
+                break
+        return goals_passed
 
     def draw_stats(self):
         self.draw_score()
@@ -89,6 +97,8 @@ class Game:
             temp_surface.blit(text, (total_width, 8 + height_offset))
             temp_surface.blit(block.get_image(), (total_width + text.get_rect().right, 0 + height_offset))
             total_width += (text.get_rect().right + Block.SIZE[0])
+            # Add a wee bit of space between goals
+            total_width += 5
 
         goal_surface = pygame.Surface((total_width, hud_height), 0, 32)
         goal_surface.blit(temp_surface, temp_surface.get_rect(), area=Rect((0, 0), (total_width, hud_height)))
@@ -103,6 +113,12 @@ class Game:
         text_rect.centery = self._window_surface.get_rect().centery
         self._window_surface.fill(GRAY, text_rect.inflate(10, 10), BLEND_RGB_SUB)
         self._window_surface.blit(text, text_rect)
+
+    def win_level(self):
+        if self._level < self._level_manager.get_max_level():
+            self._level += 1
+
+        self._new_level()
 
     def play(self):
         self._surface_manager.load_blocks(os.path.join("resources", "blocks.png"))
@@ -119,6 +135,9 @@ class Game:
 
             if self._remaining_moves <= 0:
                 self.end_game()
+
+            if self._goals_completed():
+                self.win_level()
 
             pygame.display.flip()
             self._animation_timer.tick(60)

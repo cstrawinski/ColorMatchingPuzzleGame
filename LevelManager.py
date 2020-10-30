@@ -30,3 +30,5 @@ class LevelManager:
 
         return goals
 
+    def get_max_level(self):
+        return len(self.level_data)
