@@ -39,3 +39,14 @@ class Block:
 
     def should_fall(self):
         return self._block_type == BlockType.NORMAL
+
+    def stops_blocks_above(self):
+        return self._block_type == BlockType.CRATE or \
+               self._block_type == BlockType.NONE
+
+    def is_affected_by_adjacent_clear(self):
+        return self._block_type == BlockType.CRATE
+
+    def damage(self):
+        self._life -= 1
+        return self._life <= 0

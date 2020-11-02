@@ -14,6 +14,7 @@ class SurfaceManager:
         self._block_surfaces[BlockType.NONE] = {BlockColor.BLACK: pygame.Surface(Block.SIZE, 0, 32)}
         self._block_surfaces[BlockType.NORMAL] = {c: pygame.Surface(Block.SIZE, 0, 32) for c in self._block_colors}
         self._block_surfaces[BlockType.WALL] = {BlockColor.BLACK: pygame.Surface(Block.SIZE, 0, 32)}
+        self._block_surfaces[BlockType.CRATE] = {BlockColor.BLACK: pygame.Surface(Block.SIZE, 0, 32)}
 
         block_width, block_height = Block.SIZE
         none_surface = self._block_surfaces[BlockType.NONE][BlockColor.BLACK]
@@ -25,6 +26,9 @@ class SurfaceManager:
         wall_img_idx = len(self._block_colors)
         wall_surface = self._block_surfaces[BlockType.WALL][BlockColor.BLACK]
         wall_surface.blit(block_images, (0, 0), area=pygame.Rect((wall_img_idx * block_width, 0), Block.SIZE))
+        crate_img_idx = wall_img_idx + 1
+        crate_surface = self._block_surfaces[BlockType.CRATE][BlockColor.BLACK]
+        crate_surface.blit(block_images, (0, 0), area=pygame.Rect((crate_img_idx * block_width, 0), Block.SIZE))
 
     def get_block_surfaces(self, block_type):
         return self._block_surfaces[block_type]

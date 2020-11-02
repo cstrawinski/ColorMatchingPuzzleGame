@@ -69,7 +69,40 @@ class Board:
         return connected_set
 
     def clear(self, connected_set):
-        [self._playable_area[b[1]][b[0]].set_color(BlockColor.BLACK) for b in connected_set]
+        # [self._playable_area[b[1]][b[0]].set_color(BlockColor.BLACK) for b in connected_set]
+        for b in connected_set:
+            self._playable_area[b[1]][b[0]] = self.empty_block()
+
+    def check_adjacent_blocks(self, cleared_set):
+        sorted_by_x = sorted(cleared_set, key=itemgetter(0))
+        sorted_by_y = sorted(sorted_by_x, key=itemgetter(1))
+        adjacent_blocks = set()
+        for b in sorted_by_y:
+            b_x, b_y = b
+            if b_x > 0 and (b_x - 1, b_y) not in cleared_set:
+                adjacent_blocks.add((b_x - 1, b_y))
+            if b_x < (self._width - 1) and (b_x + 1, b_y) not in cleared_set:
+                adjacent_blocks.add((b_x + 1, b_y))
+            if b_y > 0 and (b_x, b_y - 1) not in cleared_set:
+                adjacent_blocks.add((b_x, b_y - 1))
+            if b_y < (self._height - 1) and (b_x, b_y + 1) not in cleared_set:
+                adjacent_blocks.add((b_x, b_y + 1))
+
+        extra = set()
+        # Now loop over adjacent blocks, damaging the blocks that need a good smacking
+        for b in adjacent_blocks:
+            if self._playable_area[b[1]][b[0]].is_affected_by_adjacent_clear():
+                if self._playable_area[b[1]][b[0]].damage():
+                    # Should clear this block, but we also need to check for empty blocks below it now otherwise
+                    # they do not fill in
+                    b_x, b_y = b
+                    extra.add((b_x, b_y, self._playable_area[b_y][b_x]))
+                    b_y += 1
+                    while b_y < self._height and self._playable_area[b_y][b_x].get_block_type() == BlockType.NONE:
+                        extra.add((b_x, b_y, self._playable_area[b_y][b_x]))
+                        b_y += 1
+
+        return extra
 
     def fill_empty_blocks(self, empty_set):
         sorted_by_x = sorted(empty_set, key=itemgetter(0))
@@ -84,6 +117,10 @@ class Board:
         block_color = all_blocks[color_num]
         return Block(block_color, self._position, surfaces[block_color])
 
+    def empty_block(self):
+        surfaces = self._surface_manager.get_block_surfaces(BlockType.NONE)
+        return Block(BlockColor.BLACK, self._position, surfaces[BlockColor.BLACK], BlockType.NONE)
+
     def _copy_from(self, pos):
         pos_x, pos_y = pos
         block = self._playable_area[pos_y][pos_x]
@@ -95,13 +132,20 @@ class Board:
         if pos_y > 0 and block_above is not None:
             self._playable_area[pos_y][pos_x] = self._copy_from(block_above)
             self._move_blocks_down(block_above)
-        else:
+        elif pos_y == 0 or not self._playable_area[pos_y - 1][pos_x].stops_blocks_above():
             self._playable_area[pos_y][pos_x] = self.random_block()
+        else:
+            self._playable_area[pos_y][pos_x] = self.empty_block()
 
     def _get_next_fallible_block_pos(self, cur_block_pos):
         pos_x, pos_y = cur_block_pos
         pos_y -= 1
+
         while pos_y >= 0 and not self._playable_area[pos_y][pos_x].should_fall():
+            # If this block keeps blocks above from falling, stop here
+            if self._playable_area[pos_y][pos_x].stops_blocks_above():
+                return None
+
             pos_y -= 1
 
         if pos_y >= 0:

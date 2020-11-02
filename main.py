@@ -39,9 +39,10 @@ class Game:
                 if clicked_block is not None:
                     connected_blocks = self._game_board.get_connected_blocks(clicked_block, set())
                     if len(connected_blocks) >= 3:
-                        self._execute_move(self._game_board.get_block_at(clicked_block), connected_blocks)
+                        extra_cleared = self._game_board.check_adjacent_blocks(connected_blocks)
+                        self._execute_move(self._game_board.get_block_at(clicked_block), connected_blocks, extra_cleared)
 
-    def _execute_move(self, clicked_block, connected_blocks):
+    def _execute_move(self, clicked_block, connected_blocks, extra_cleared):
         # Do we have a goal for these blocks?
         key = (clicked_block.get_block_type(), clicked_block.get_color())
         if key in self._goals:
@@ -51,8 +52,25 @@ class Game:
                 count = 0
             self._goals[key] = count, block
 
+        # Check goals of extra blocks cleared
+        extra_coords = set()
+        for b in extra_cleared:
+            b_x, b_y, block = b
+            extra_coords.add((b_x, b_y))
+            key = (block.get_block_type(), block.get_color())
+            if key in self._goals:
+                count, block = self._goals[key]
+                self._score += 1
+                if count == 0:
+                    continue
+                self._goals[key] = count - 1, block
+
         self._game_board.clear(connected_blocks)
         self._score += len(connected_blocks)
+        # No points for these, they were already counted
+        if len(extra_coords) > 0:
+            self._game_board.clear(extra_coords)
+            connected_blocks.update(extra_coords)
         self._remaining_moves -= 1
         self._game_board.fill_empty_blocks(connected_blocks)
 
