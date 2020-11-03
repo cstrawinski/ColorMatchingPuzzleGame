@@ -17,8 +17,13 @@ class LevelManager:
         with open('leveldata.json', 'r') as f:
             self.level_data = json.load(f)
 
-    # Return list of tuples where each tuple is (count, Block)
-    def get_goals(self, level):
+    def get_goals(self, level: int) -> {(BlockType, BlockColor): (int, Block)}:
+        """
+        Retrieves the goals for the given level
+        :param level:
+        :return: Dictionary of tuples of count, Block representing each type of block and number needed to clear.
+        Key is tuple of BlockType, BlockColor
+        """
         goal_data = self.level_data[level]['goal']
         goals = {}
         for c, typ, color in goal_data:
@@ -31,4 +36,8 @@ class LevelManager:
         return goals
 
     def get_max_level(self):
+        """
+        Get the number of levels available
+        :return:
+        """
         return len(self.level_data)

@@ -2,17 +2,25 @@ from operator import itemgetter
 from colors import BlockColor
 from Block import Block
 from BlockType import BlockType
+from SurfaceManager import SurfaceManager
 import random
+import pygame
 
 
 class Board:
-    def __init__(self, dimensions, board_position, surface_manager):
+    def __init__(self, dimensions: (int, int), board_position: (int, int), surface_manager: SurfaceManager):
         self._width, self._height = dimensions
         self._position = board_position
         self._playable_area = []
         self._surface_manager = surface_manager
 
-    def new(self, level, position):
+    def new(self, level: {str: object}, position: (int, int)):
+        """
+        Creates a new board with the level data for the given level
+        :param level: Dictionary of level data loaded from file
+        :param position: Window x, y coordinates to place upper-left corner of playable area
+        :return: None
+        """
         self._position = position
         self._width = level['board_width']
         self._height = level['board_height']
@@ -26,29 +34,40 @@ class Board:
                                               block_surfaces[BlockColor[color_name]],
                                               BlockType(typ))
 
-    def draw(self, dst_surface):
+    def draw(self, dst_surface: pygame.Surface):
         [[self._playable_area[y][x].draw(x, y, dst_surface) for x in range(self._width)] for y in range(self._height)]
 
-    def click_block(self, pos):
+    def click_block(self, pos: (int, int)) -> (int, int):
+        """
+        Locates the block clicked at the given pos (in window coordinates)
+        :param pos: Tuple with x, y coordinates of window position clicked
+        :return: Tuple with x, y coordinates of block clicked
+        """
         pos_x, pos_y = pos
         board_pos = (pos_x - self._position[0], pos_y - self._position[1])
         if board_pos[0] < 0 or board_pos[1] < 0:
-            return
+            return None
 
         clicked_block = (int(board_pos[0] / Block.SIZE[0]),
                          int(board_pos[1] / Block.SIZE[1]))
 
         if clicked_block[0] >= self._width or clicked_block[1] >= self._height:
-            return
+            return None
 
         print('Block at [%s, %s] was clicked' % clicked_block)
         return clicked_block
 
-    def get_block_at(self, pos):
+    def get_block_at(self, pos: (int, int)) -> Block:
         pos_x, pos_y = pos
         return self._playable_area[pos_y][pos_x]
 
-    def get_connected_blocks(self, start_pos, connected_set):
+    def get_connected_blocks(self, start_pos: (int, int), connected_set=set()) -> {(int, int)}:
+        """
+        Find and return all identical blocks that are connected to the block at start_pos.
+        :param start_pos: Tuple with x, y coordinate of starting block to search
+        :param connected_set: Working set of connected blocks. Do not use when calling this function.
+        :return: Set of tuples with x, y coordinates of all matching blocks connected to block at start_pos.
+        """
         block_x, block_y = start_pos
         block = self._playable_area[block_y][block_x]
         connected_set.add(start_pos)
@@ -68,12 +87,23 @@ class Board:
 
         return connected_set
 
-    def clear(self, connected_set):
+    def clear(self, connected_set: {(int, int)}):
+        """
+        Set all blocks at locations in connected_set to an empty Block (BlockType.NONE)
+        :param connected_set: Set of tuples with x, y coordinates of blocks to clear
+        :return: None
+        """
         # [self._playable_area[b[1]][b[0]].set_color(BlockColor.BLACK) for b in connected_set]
         for b in connected_set:
             self._playable_area[b[1]][b[0]] = self.empty_block()
 
-    def check_adjacent_blocks(self, cleared_set):
+    def check_adjacent_blocks(self, cleared_set: {(int, int)}) -> {(int, int, Block)}:
+        """
+        Checks adjacent blocks to cleared_set and returns additional blocks that should be cleared
+        :param cleared_set: {(int: x, int: y)}
+        :return: {(int: x, int: y, Block)} - Set of tuples with x, y coordinates and Block that need to be cleared
+        and filled in.
+        """
         sorted_by_x = sorted(cleared_set, key=itemgetter(0))
         sorted_by_y = sorted(sorted_by_x, key=itemgetter(1))
         adjacent_blocks = set()
@@ -91,8 +121,8 @@ class Board:
         extra = set()
         # Now loop over adjacent blocks, damaging the blocks that need a good smacking
         for b in adjacent_blocks:
-            if self._playable_area[b[1]][b[0]].is_affected_by_adjacent_clear():
-                if self._playable_area[b[1]][b[0]].damage():
+            if self._playable_area[b_y][b_x].is_affected_by_adjacent_clear():
+                if self._playable_area[b_y][b_x].damage():
                     # Should clear this block, but we also need to check for empty blocks below it now otherwise
                     # they do not fill in
                     b_x, b_y = b
@@ -104,13 +134,22 @@ class Board:
 
         return extra
 
-    def fill_empty_blocks(self, empty_set):
+    def fill_empty_blocks(self, empty_set: {(int, int)}):
+        """
+        Collapses blocks above empty_set, filling it in. New blocks will be created as needed.
+        :param empty_set: Set of tuples with x, y coordinates of blocks to fill in.
+        :return: None
+        """
         sorted_by_x = sorted(empty_set, key=itemgetter(0))
         empty_block_list = sorted(sorted_by_x, key=itemgetter(1))
         print(empty_block_list)
         [self._move_blocks_down(block_pos) for block_pos in empty_block_list]
 
-    def random_block(self):
+    def random_block(self) -> Block:
+        """
+        Creates a random colored block
+        :return: The new block
+        """
         all_blocks = self._surface_manager.get_block_colors()
         surfaces = self._surface_manager.get_block_surfaces(BlockType.NORMAL)
         color_num = random.randint(0, len(all_blocks) - 1)
@@ -118,15 +157,19 @@ class Board:
         return Block(block_color, self._position, surfaces[block_color])
 
     def empty_block(self):
+        """
+        Creates an empty block
+        :return: An empty Block
+        """
         surfaces = self._surface_manager.get_block_surfaces(BlockType.NONE)
         return Block(BlockColor.BLACK, self._position, surfaces[BlockColor.BLACK], BlockType.NONE)
 
-    def _copy_from(self, pos):
+    def _copy_from(self, pos: (int, int)):
         pos_x, pos_y = pos
         block = self._playable_area[pos_y][pos_x]
         return Block(block.get_color(), self._position, block.get_image(), block.get_block_type())
 
-    def _move_blocks_down(self, pos):
+    def _move_blocks_down(self, pos: (int, int)):
         pos_x, pos_y = pos
         block_above = self._get_next_fallible_block_pos(pos)
         if pos_y > 0 and block_above is not None:
@@ -137,7 +180,13 @@ class Board:
         else:
             self._playable_area[pos_y][pos_x] = self.empty_block()
 
-    def _get_next_fallible_block_pos(self, cur_block_pos):
+    def _get_next_fallible_block_pos(self, cur_block_pos: (int, int)) -> (int, int):
+        """
+        Locates the x, y coordinates of the next block above cur_block_pos that can fall down. Returns None
+        if none found.
+        :param cur_block_pos: Tuple with x, y coordinates of starting block.
+        :return: Tuple with x, y coordinates of next block above that can fall. None, if no blocks above should fall.
+        """
         pos_x, pos_y = cur_block_pos
         pos_y -= 1
 

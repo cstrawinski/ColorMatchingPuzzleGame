@@ -34,13 +34,19 @@ class Game:
             if event.type == QUIT:
                 pygame.quit()
                 sys.exit()
+
             if event.type == MOUSEBUTTONDOWN and event.button == 1 and self._remaining_moves > 0:
                 clicked_block = self._game_board.click_block(event.pos)
                 if clicked_block is not None:
-                    connected_blocks = self._game_board.get_connected_blocks(clicked_block, set())
+                    connected_blocks = self._game_board.get_connected_blocks(clicked_block)
                     if len(connected_blocks) >= 3:
                         extra_cleared = self._game_board.check_adjacent_blocks(connected_blocks)
                         self._execute_move(self._game_board.get_block_at(clicked_block), connected_blocks, extra_cleared)
+
+            if event.type == KEYDOWN:
+                if event.unicode.lower() == 'r':
+                    # Reset the current level
+                    self._new_level()
 
     def _execute_move(self, clicked_block, connected_blocks, extra_cleared):
         # Do we have a goal for these blocks?
@@ -83,9 +89,8 @@ class Game:
         board_height = level['board_height'] * Block.SIZE[1]
         board_position = (window_width - board_width) / 2, (window_height - board_height) / 2
 
-        self._game_board.new(self._level_manager.level_data[self._level - 1], board_position)
-        self._remaining_moves = self._level_manager.level_data[self._level - 1]['max_moves']
-        # self._level_manager.level_data[self._level]['goal']
+        self._game_board.new(level, board_position)
+        self._remaining_moves = level['max_moves']
         self._goals = self._level_manager.get_goals(self._level - 1)
 
     def _goals_completed(self):
