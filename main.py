@@ -5,6 +5,7 @@ from pygame.locals import *
 from colors import *
 from Block import Block
 from Board import Board
+from AnimationManager import AnimationManager
 from LevelManager import LevelManager
 from SurfaceManager import SurfaceManager
 
@@ -21,7 +22,8 @@ class Game:
         pygame.display.set_caption('Color Matching Puzzle Game')
         self._surface_manager = SurfaceManager()
         self._level_manager = LevelManager(self._surface_manager)
-        self._game_board = Board((10, 12), (35, self.HUD_SIZE[1]), self._surface_manager)
+        self._animation_manager = AnimationManager()
+        self._game_board = Board((10, 12), (35, self.HUD_SIZE[1]), self._surface_manager, self._animation_manager)
         self._level = 1
         self._score = 0
         self._remaining_moves = 0
@@ -100,6 +102,7 @@ class Game:
             if count > 0:
                 goals_passed = False
                 break
+
         return goals_passed
 
     def draw_stats(self):
@@ -158,6 +161,8 @@ class Game:
 
         while True:
             self.__handle_events()
+
+            self._animation_manager.update(self._animation_timer.tick())
 
             self._window_surface.fill(BLACK)
 

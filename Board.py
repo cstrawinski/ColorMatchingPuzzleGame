@@ -1,6 +1,7 @@
 from operator import itemgetter
-from colors import BlockColor
+from AnimationManager import AnimationManager
 from Block import Block
+from colors import BlockColor
 from BlockType import BlockType
 from SurfaceManager import SurfaceManager
 import random
@@ -8,7 +9,8 @@ import pygame
 
 
 class Board:
-    def __init__(self, dimensions: (int, int), board_position: (int, int), surface_manager: SurfaceManager):
+    def __init__(self, dimensions: (int, int), board_position: (int, int), surface_manager: SurfaceManager,
+                 animation_manager: AnimationManager):
         self._width, self._height = dimensions
         self._position = board_position
         self._playable_area = []
@@ -61,7 +63,7 @@ class Board:
         pos_x, pos_y = pos
         return self._playable_area[pos_y][pos_x]
 
-    def get_connected_blocks(self, start_pos: (int, int), connected_set=set()) -> {(int, int)}:
+    def get_connected_blocks(self, start_pos: (int, int), connected_set=None) -> {(int, int)}:
         """
         Find and return all identical blocks that are connected to the block at start_pos.
         :param start_pos: Tuple with x, y coordinate of starting block to search
@@ -70,6 +72,8 @@ class Board:
         """
         block_x, block_y = start_pos
         block = self._playable_area[block_y][block_x]
+        if connected_set is None:
+            connected_set = set()
         connected_set.add(start_pos)
 
         # Check left
